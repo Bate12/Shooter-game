@@ -20,7 +20,7 @@ class Gun():
     def shoot(self, dir):
         bullInitPos = self.pos.copy()
         self.bullets.append([bullInitPos, pygame.Rect(bullInitPos.x ,bullInitPos.y, 10, 10) , dir])
-        pygame.mixer.Sound.play(self.shootSFX)
+        pygame.mixer.Sound.play(self.shootSFX).set_volume(VOLUME)
 
     def update(self, player):
         self.pos = pygame.Vector2(player.pos.x, player.pos.y)

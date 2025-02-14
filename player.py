@@ -95,16 +95,17 @@ class Player():
         for e in enemies[:]:
             if self.rect.colliderect(e.rect):
                 self.alive = False
-                pygame.mixer.Sound.play(self.hurtSFX)
+                pygame.mixer.Sound.play(self.hurtSFX).set_volume(VOLUME)
                 return 
         
         for e in enemies[:]:
             for b in bullets[:]:
                 if b[1].colliderect(e.rect):
-                    pygame.mixer.Sound.play(self.hitSFX)
+                    pygame.mixer.Sound.play(self.hitSFX).set_volume(VOLUME)
                     enemies.remove(e)
                     bullets.remove(b)
                     game.score += 1
+                    game.levelHandler()
                     break
 
         
