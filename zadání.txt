@@ -1,0 +1,6 @@
+Shooter game
+
+- cílem je vytvořit 2D hru v Pythonu pomocí knihovny pygame
+- hráč bude mít za úkol získat co nejvyšší skóre zabíjením nepřátel
+- nepřátele budou mít (nejspíš) různé typy
+- hráč má k dispozici střelnou zbraň
