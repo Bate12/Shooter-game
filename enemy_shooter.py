@@ -17,7 +17,7 @@ class EnemyShooter(Enemy):
     def shoot(self, player, current_time, shootSpeed):
         if current_time - self.last_shot_time >= self.shoot_cd:
             direction = player.pos - self.pos
-            new_bullet = Projectile(self.pos, direction, shootSpeed, 10, friendly=False)  # Nepřátelský projektil
+            new_bullet = Projectile(self.rect.center, direction, shootSpeed, 10, friendly=False)  # Nepřátelský projektil
             self.bullets.append(new_bullet)
             self.last_shot_time = current_time  # Reset časovače
     

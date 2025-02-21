@@ -14,6 +14,9 @@ class Game():
         pygame.font.init()
         pygame.display.set_caption("Epická semestrálka")
 
+        iconImage = pygame.image.load('assets/player.png')
+        pygame.display.set_icon(iconImage)
+
         self.restartText = Text('"R" to restart', HALFWIDTH, HALFHEIGHT)
         self.restartText.isVisable = False
 
@@ -25,7 +28,7 @@ class Game():
         self.win=pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
 
-        self.generalSize = 20
+        self.generalSize = 30
  
         self.player = Player((HALFWIDTH, HALFHEIGHT), self.generalSize)
         self.enemies = []

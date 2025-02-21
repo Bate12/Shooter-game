@@ -7,6 +7,7 @@ class Player():
         self.pos = pygame.Vector2(pos)
         self.vel = pygame.Vector2()
         self.size = size
+        self.halfSize = self.size//2
         self.alive = True
 
         self.friction = -0.5
@@ -18,19 +19,23 @@ class Player():
         self.hurtSFX = pygame.mixer.Sound("assets/hitHurt.wav")
         self.hitSFX = pygame.mixer.Sound("assets/explosion.wav")
 
+        self.image = pygame.image.load("assets/player.png")
+        self.image = pygame.transform.scale(self.image, (self.size, self.size))
+
         self.gun = Gun()
 
     def updateRect(self):
         self.rect = pygame.Rect(self.pos.x ,self.pos.y, self.size, self.size)
 
     def gunHandler(self, mpos, shoot):
-        dist = pygame.Vector2(mpos[0] - self.pos.x, mpos[1] - self.pos.y)
+        dist = pygame.Vector2(mpos[0] - (self.pos.x + self.halfSize), mpos[1] - (self.pos.y + self.halfSize))
         dist.normalize_ip()
         #dist = dist.rotate(90)
         
-        dist*= 20
+        dist*= 25
         
-        self.gun.pos = self.rect.center + dist - (self.gun.size//2, self.gun.size//2)
+        self.gun.pos = self.rect.center + dist - (self.gun.halfSize, self.gun.halfSize)
+        self.gun.rotateTo(dist)
         self.gun.updateRect()
 
         if shoot:
@@ -111,8 +116,10 @@ class Player():
         
             
     def render(self, win):
-        pygame.draw.rect(win, self.color, self.rect)
-        pygame.draw.rect(win, self.gun.color, self.gun.rect)
+        win.blit(self.image, self.rect)
+        #pygame.draw.rect(win, self.color, self.rect)
+        #pygame.draw.rect(win, self.gun.color, self.gun.rect)
+        self.gun.render(win)
         for b in self.gun.bullets:
             pygame.draw.rect(win, self.gun.bullColor, b[1])
 
