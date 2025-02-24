@@ -23,6 +23,7 @@ class Player():
         self.image = pygame.transform.scale(self.image, (self.size, self.size))
 
         self.gun = Gun()
+        self.gunDistance = 30
 
     def updateRect(self):
         self.rect = pygame.Rect(self.pos.x ,self.pos.y, self.size, self.size)
@@ -31,15 +32,16 @@ class Player():
         dist = pygame.Vector2(mpos[0] - (self.pos.x + self.halfSize), mpos[1] - (self.pos.y + self.halfSize))
         dist.normalize_ip()
         #dist = dist.rotate(90)
+
+        if shoot:
+            self.gun.shoot(dist)
+            dist.scale_to_length(0.5)
         
-        dist*= 25
+        dist*= self.gunDistance
         
         self.gun.pos = self.rect.center + dist - (self.gun.halfSize, self.gun.halfSize)
         self.gun.rotateTo(dist)
         self.gun.updateRect()
-
-        if shoot:
-            self.gun.shoot(dist)
 
         for b in self.gun.bullets:
             b[0] += b[2] * self.gun.shootVel

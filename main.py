@@ -99,7 +99,7 @@ class Game():
         for event in pygame.event.get():
             mPos = pygame.mouse.get_pos()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.shoot = True
                 
             if event.type==pygame.QUIT:

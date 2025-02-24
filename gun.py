@@ -14,7 +14,7 @@ class Gun():
         self.image = pygame.transform.scale(self.image, (self.size, self.size))
         self.angle = 0
 
-        self.shootVel = 0.8
+        self.shootVel = 0.6
         self.bullets = []
 
         self.shootSFX = pygame.mixer.Sound("assets/laserShoot.wav")
@@ -24,6 +24,7 @@ class Gun():
 
     def shoot(self, dir):
         bullInitPos = self.pos.copy()
+        dir.normalize_ip()
         self.bullets.append([bullInitPos, pygame.Rect(bullInitPos.x ,bullInitPos.y, 10, 10) , dir])
         pygame.mixer.Sound.play(self.shootSFX).set_volume(VOLUME)
 
