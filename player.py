@@ -1,43 +1,59 @@
-import pygame, math
+import pygame as pg
 from settings import *
 from gun import Gun
+from object import Object
 
-class Player():
-    def __init__(self, pos, size):
-        self.pos = pygame.Vector2(pos)
-        self.vel = pygame.Vector2()
+class Player(Object):
+    def __init__(self, game, pos, size):
+        # Call the parent class constructor properly
+        super().__init__(game, pos, size, isCentered=True)
+        
+        # Player-specific attributes
+        self.vel = pg.Vector2()
+        self.acc = pg.Vector2()
         self.size = size
-        self.halfSize = self.size//2
+        self.halfSize = self.size // 2
         self.alive = True
 
-        self.friction = -0.5
-        self.accspeed = 30
+        self.friction = -0.6
+        self.accspeed = 40
         self.maxspeed = 50
         
-        self.color = (255,0,255)
+        self.color = (255, 0, 255)
+        
+        self.hurtSFX = pg.mixer.Sound("assets/hitHurt.wav")
+        self.hitSFX = pg.mixer.Sound("assets/explosion.wav")
 
-        self.hurtSFX = pygame.mixer.Sound("assets/hitHurt.wav")
-        self.hitSFX = pygame.mixer.Sound("assets/explosion.wav")
+        self.image = pg.image.load("assets/player.png")
+        self.image = pg.transform.scale(self.image, (self.size, self.size))
 
-        self.image = pygame.image.load("assets/player.png")
-        self.image = pygame.transform.scale(self.image, (self.size, self.size))
+        self.game = game
 
-        self.gun = Gun()
+        self.gun = Gun(self.game, self)
         self.gunDistance = 30
 
-    def updateRect(self):
-        self.rect = pygame.Rect(self.pos.x ,self.pos.y, self.size, self.size)
+        self.updateRect()
 
-    def gunHandler(self, mpos, shoot):
-        dist = pygame.Vector2(mpos[0] - (self.pos.x + self.halfSize), mpos[1] - (self.pos.y + self.halfSize))
+    def updateRect(self):
+        # Centered position adjustment
+        if self.isCentered:
+            self.rect.center = self.pos
+        else:
+            self.rect.topleft = self.pos
+
+    def gunHandler(self):
+        # Get mouse position and shoot state from the Game object
+        mpos = self.game.mPos
+        shoot = self.game.shoot
+
+        dist = pg.Vector2(mpos[0] - (self.pos.x + self.halfSize), mpos[1] - (self.pos.y + self.halfSize))
         dist.normalize_ip()
-        #dist = dist.rotate(90)
 
         if shoot:
             self.gun.shoot(dist)
             dist.scale_to_length(0.5)
         
-        dist*= self.gunDistance
+        dist *= self.gunDistance
         
         self.gun.pos = self.rect.center + dist - (self.gun.halfSize, self.gun.halfSize)
         self.gun.rotateTo(dist)
@@ -49,38 +65,43 @@ class Player():
 
         self.gun.bullets = [b for b in self.gun.bullets if 0 < b[0].x < WIDTH and 0 < b[0].y < HEIGHT]
 
-    def update(self, keys , dt, mpos, shoot):
-        self.acc = pygame.Vector2()
+    def update(self):
+        self.acc = pg.Vector2()
         
-        if keys[ord("w")]:
+        # Movement handling
+        if self.game.keys[ord("w")]:
             self.acc.y -= self.accspeed
             
-        if  keys[ord("s")]:
+        if self.game.keys[ord("s")]:
             self.acc.y += self.accspeed
             
-        if keys[ord("d")]:
+        if self.game.keys[ord("d")]:
             self.acc.x += self.accspeed
             
-        if keys[ord("a")]:
+        if self.game.keys[ord("a")]:
             self.acc.x -= self.accspeed
 
+        # Physics calculations
         self.acc += self.vel * self.friction
-        self.vel += self.acc * dt
+        self.vel += self.acc * self.game.dt
         self.limit_vel(self.maxspeed)
 
-        self.pos += self.vel * dt + (self.acc * 0.5) * (dt * dt)
+        self.pos += self.vel * self.game.dt + (self.acc * 0.5) * (self.game.dt * self.game.dt)
 
         self.inScreenCheck()
         self.updateRect()
-        self.gunHandler(mpos, shoot)
+
+        self.gun.update()
+        self.gunHandler()
 
     def limit_vel(self, max_vel):
         try:
             self.vel = self.vel.clamp_magnitude(self.maxspeed)
-        except:
-            pass
+        except ValueError:
+            self.vel = pg.Vector2(0, 0)
 
     def inScreenCheck(self):
+        # Screen boundary checks
         if self.pos.x < 0:
             self.vel.x = 0
             self.pos.x = 0
@@ -97,33 +118,29 @@ class Player():
             self.vel.y = 0
             self.pos.y = HEIGHT - self.size
 
-
-    def enemyColCheck(self, enemies, bullets, game):
+    def enemyColCheck(self, enemies, bullets):
+        # Collision with enemies
         for e in enemies[:]:
             if self.rect.colliderect(e.rect):
                 self.alive = False
-                pygame.mixer.Sound.play(self.hurtSFX).set_volume(VOLUME)
+                pg.mixer.Sound.play(self.hurtSFX).set_volume(VOLUME)
                 return 
         
+        # Bullet and enemy collision
         for e in enemies[:]:
             for b in bullets[:]:
                 if b[1].colliderect(e.rect):
-                    pygame.mixer.Sound.play(self.hitSFX).set_volume(VOLUME)
+                    pg.mixer.Sound.play(self.hitSFX).set_volume(VOLUME)
                     enemies.remove(e)
                     bullets.remove(b)
-                    game.score += 1
-                    game.levelHandler()
+                    self.game.score += 1
+                    self.game.levelHandler()
                     break
 
-        
-            
-    def render(self, win):
+    def draw(self, win):
         win.blit(self.image, self.rect)
-        #pygame.draw.rect(win, self.color, self.rect)
-        #pygame.draw.rect(win, self.gun.color, self.gun.rect)
-        self.gun.render(win)
-        for b in self.gun.bullets:
-            pygame.draw.rect(win, self.gun.bullColor, b[1])
+        self.gun.draw(win)
+
 
 if __name__ == "__main__":
     quit()

@@ -1,6 +1,7 @@
 import pygame, math
 from random import randint, choice
 from player import Player
+from object import Object
 from enemy import Enemy
 from enemy_shooter import EnemyShooter
 from text import Text
@@ -23,16 +24,19 @@ class Game():
         self.score = 0
         self.scoreText = Text(f"{self.score}", HALFWIDTH, 20, 40)
         
-        
         self.running = True
         self.win=pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
-
-        self.generalSize = 30
  
-        self.player = Player((HALFWIDTH, HALFHEIGHT), self.generalSize)
+        self.player = Player(self, (HALFWIDTH, HALFHEIGHT), GENERAL_SIZE)
         self.enemies = []
-        #self.enemies.append(EnemyShooter((200, 200), self.generalSize, 1))
+
+        self.background = Object(self, (50, 50), WIDTH - 100, HEIGHT - 100, color=(BG_COLOR), isCentered=False)
+        self.allSprites = pygame.sprite.Group()
+        self.playerGroup = pygame.sprite.Group(self.player)
+        self.allSprites.add(self.background)
+        self.allSprites.add(self.player.gun)
+        #self.allSprites.add(self.player)
 
         self.shoot = False
 
@@ -48,6 +52,8 @@ class Game():
         self.spawnCount = 1
         self.enemySpeed = 2.5
         self.enemyProjectileSpeed = 5
+
+        
 
 
     def restart(self):
@@ -76,16 +82,21 @@ class Game():
           
     def Render(self):
         self.win.fill((255,255,255))
-        self.player.render(self.win)
-
+        self.allSprites.draw(self.win)
+    
         for e in self.enemies:
             e.render(self.win)
+
+        self.player.draw(self.win)
 
         self.restartText.render(self.win)
         self.scoreText.render(self.win)
         self.lvlText.render(self.win)
 
         pygame.display.flip()
+
+    def Update(self):
+        self.allSprites.update()
 
     def enemySpawner(self):
         if self.timeTotal > self.spawnEstimate:
@@ -95,15 +106,15 @@ class Game():
 
 
     def eventHandler(self):
-        global mPos
-        for event in pygame.event.get():
-            mPos = pygame.mouse.get_pos()
+        self.mPos = pygame.mouse.get_pos()
 
+        for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.shoot = True
-                
+                    
             if event.type==pygame.QUIT:
-                self.running=False
+                self.running = False
+
 
     def getPosOutsideBounds(self, padding):
         side = choice(["left", "right", "top", "bottom"])
@@ -124,28 +135,28 @@ class Game():
         return x, y
 
     def spawnEnemy(self):
-        pos = self.getPosOutsideBounds(self.generalSize)
+        pos = self.getPosOutsideBounds(GENERAL_SIZE)
         # Randomly choose between Enemy and EnemyShooter
         if randint(0, self.spawnVariety) == 0:
             shoot_cd = randint(10, 30) / 10  # Náhodný cooldown mezi 1.0 a 3.0 sekundami
-            self.enemies.append(EnemyShooter(pos, self.generalSize, 1, shoot_cd, self.enemyProjectileSpeed)) # projectile speed nefunguje jak má
+            self.enemies.append(EnemyShooter(pos, GENERAL_SIZE, 1, shoot_cd, self.enemyProjectileSpeed)) # projectile speed nefunguje jak má
         else:
-            self.enemies.append(Enemy(pos, self.generalSize, self.enemySpeed))
+            self.enemies.append(Enemy(pos, GENERAL_SIZE, self.enemySpeed))
 
     def mainLoop(self):
         while self.running:
-            dt = self.clock.tick(FPS) / 100
-            self.timeTotal += dt / 10
+            self.dt = self.clock.tick(FPS) / 100
+            self.timeTotal += self.dt / 10
 
-            keys = pygame.key.get_pressed()
+            self.keys = pygame.key.get_pressed()
 
             self.eventHandler()
 
             self.scoreText.update(f"{self.score}")
 
             if self.player.alive:
-                self.player.update(keys, dt, mPos, self.shoot)
-                self.player.enemyColCheck(self.enemies, self.player.gun.bullets, self)
+                self.playerGroup.update()
+                self.player.enemyColCheck(self.enemies, self.player.gun.bullets)
                 self.enemySpawner()
                 
                 # Kontrola kolize hráče s nepřátelskými projektily
@@ -161,11 +172,12 @@ class Game():
             else:
                 self.restartText.isVisable = True
 
-            if not self.player.alive and keys[ord("r")]:
+            if not self.player.alive and self.keys[ord("r")]:
                 self.restart()
 
             self.shoot = False
 
+            self.Update()
             self.Render()
 
 g = Game()
