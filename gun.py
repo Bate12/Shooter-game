@@ -40,8 +40,8 @@ class Gun(pg.sprite.Sprite):
 
     def rotateTo(self, dir):
         self.angle = dir.angle_to(Vec(1, 0))
-        self.image = pg.transform.rotate(self.orig_image, -self.angle)
-        self.rect = self.image.get_rect(center=self.rect.center)
+        #self.image = pg.transform.rotate(self.orig_image, self.angle)
+        #self.rect = self.image.get_rect(center=self.rect.center)
 
     def getClosest(self, objectList):
         closestMag = 1000
@@ -70,7 +70,7 @@ class Gun(pg.sprite.Sprite):
         # Rotate towards the mouse
         self.target = self.getClosest(self.game.enemies)
         try:
-            self.closest = self.target.pos
+            self.closest = self.target.rect.center
             direction = Vec(self.closest - self.player.pos)
             self.rotateTo(direction)
 
@@ -101,5 +101,5 @@ class Gun(pg.sprite.Sprite):
             pg.draw.rect(win, self.bullColor, bullet[1])
 
         if self.closest != None:
-            pg.draw.rect(win, (255,50,80), self.target.rect, 5)
+            pg.draw.rect(win, (50,50,80), self.target.rect, 5)
 

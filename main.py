@@ -18,6 +18,11 @@ class Game():
         iconImage = pygame.image.load('assets/player.png')
         pygame.display.set_icon(iconImage)
 
+        self.bgImage = pygame.image.load("assets/bg_image.png")
+        self.bgImage2 = pygame.image.load("assets/bg_image2.png")
+
+        self.tileSize = 200
+
         self.restartText = Text('"R" to restart', HALFWIDTH, HALFHEIGHT)
         self.restartText.isVisable = False
 
@@ -33,9 +38,8 @@ class Game():
 
         self.background = Object(self, (50, 50), WIDTH - 100, HEIGHT - 100, color=(BG_COLOR), isCentered=False)
         self.allSprites = pygame.sprite.Group()
-        self.playerGroup = pygame.sprite.Group(self.player)
-        self.allSprites.add(self.background)
-        self.allSprites.add(self.player.gun)
+        self.playerGroup = pygame.sprite.GroupSingle(self.player)
+        #self.allSprites.add(self.background)
         #self.allSprites.add(self.player)
 
         self.shoot = False
@@ -53,8 +57,14 @@ class Game():
         self.enemySpeed = 2.5
         self.enemyProjectileSpeed = 5
 
-        
+        self.shootEvent = pygame.USEREVENT + 1
+        self.shootCD = 800
+        pygame.time.set_timer(self.shootEvent, self.shootCD) 
 
+    def drawBackground(self):
+        for x in range(0, WIDTH, self.tileSize):
+            for y in range (0, HEIGHT, self.tileSize):
+                self.win.blit(self.bgImage2, (x, y))
 
     def restart(self):
         self.restartText.isVisable = False
@@ -81,7 +91,7 @@ class Game():
         self.lvlText.update(f"Level {self.levels.lvl}")
           
     def Render(self):
-        self.win.fill((255,255,255))
+        self.drawBackground()
         self.allSprites.draw(self.win)
     
         for e in self.enemies:
@@ -109,11 +119,14 @@ class Game():
         self.mPos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                self.shoot = True
+            #if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            #    self.shoot = True
                     
             if event.type==pygame.QUIT:
                 self.running = False
+
+            if event.type == self.shootEvent:
+                self.shoot = True
 
 
     def getPosOutsideBounds(self, padding):

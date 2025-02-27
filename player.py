@@ -31,22 +31,21 @@ class Player(Object):
 
         self.gun = Gun(self.game, self)
         self.gunDistance = 30
+        self.lastTarget = None
 
         self.updateRect()
-
-    def updateRect(self):
-        # Centered position adjustment
-        if self.isCentered:
-            self.rect.center = self.pos
-        else:
-            self.rect.topleft = self.pos
 
     def gunHandler(self):
         # Get mouse position and shoot state from the Game object
         mpos = self.game.mPos
         shoot = self.game.shoot
+        dist = pg.Vector2(1,0)
 
-        dist = pg.Vector2(mpos[0] - (self.pos.x + self.halfSize), mpos[1] - (self.pos.y + self.halfSize))
+        if self.gun.closest:
+            dist = pg.Vector2(self.gun.closest[0] - self.pos.x, self.gun.closest[1] - self.pos.y)
+            self.lastTarget = dist.copy()
+        elif self.lastTarget:
+            dist = self.lastTarget
         dist.normalize_ip()
 
         if shoot:
