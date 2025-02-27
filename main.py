@@ -6,6 +6,7 @@ from enemy import Enemy
 from enemy_shooter import EnemyShooter
 from text import Text
 from levels import Leveles
+from camera import Camera
 from settings import *
 
 
@@ -34,11 +35,12 @@ class Game():
         self.clock = pygame.time.Clock()
  
         self.player = Player(self, (HALFWIDTH, HALFHEIGHT), GENERAL_SIZE)
-        self.enemies = []
+        self.enemies = pygame.sprite.Group()
 
         self.background = Object(self, (50, 50), WIDTH - 100, HEIGHT - 100, color=(BG_COLOR), isCentered=False)
         self.allSprites = pygame.sprite.Group()
         self.playerGroup = pygame.sprite.GroupSingle(self.player)
+        self.allSprites.add(self.enemies)
         #self.allSprites.add(self.background)
         #self.allSprites.add(self.player)
 
@@ -59,12 +61,16 @@ class Game():
 
         self.shootEvent = pygame.USEREVENT + 1
         self.shootCD = 800
-        pygame.time.set_timer(self.shootEvent, self.shootCD) 
+        self.setShootCD(self.shootCD)
+
 
     def drawBackground(self):
         for x in range(0, WIDTH, self.tileSize):
             for y in range (0, HEIGHT, self.tileSize):
                 self.win.blit(self.bgImage2, (x, y))
+
+    def setShootCD(self, cd):
+        pygame.time.set_timer(self.shootEvent, cd)
 
     def restart(self):
         self.restartText.isVisable = False
@@ -74,7 +80,8 @@ class Game():
         self.player.pos.y = HALFHEIGHT
         self.player.vel = pygame.Vector2()
 
-        self.enemies = []
+        self.enemies.empty()
+        self.allSprites.empty()
         self.player.gun.bullets = []
 
         self.spawnEstimate = self.timeTotal
@@ -93,9 +100,9 @@ class Game():
     def Render(self):
         self.drawBackground()
         self.allSprites.draw(self.win)
-    
         for e in self.enemies:
-            e.render(self.win)
+            if isinstance(e, EnemyShooter):
+                e.render(self.win)
 
         self.player.draw(self.win)
 
@@ -106,7 +113,7 @@ class Game():
         pygame.display.flip()
 
     def Update(self):
-        self.allSprites.update()
+        self.enemies.update()
 
     def enemySpawner(self):
         if self.timeTotal > self.spawnEstimate:
@@ -152,9 +159,10 @@ class Game():
         # Randomly choose between Enemy and EnemyShooter
         if randint(0, self.spawnVariety) == 0:
             shoot_cd = randint(10, 30) / 10  # Náhodný cooldown mezi 1.0 a 3.0 sekundami
-            self.enemies.append(EnemyShooter(pos, GENERAL_SIZE, 1, shoot_cd, self.enemyProjectileSpeed)) # projectile speed nefunguje jak má
+            self.enemies.add(EnemyShooter(self, pos, GENERAL_SIZE, 1, shoot_cd, self.enemyProjectileSpeed)) # projectile speed nefunguje jak má
         else:
-            self.enemies.append(Enemy(pos, GENERAL_SIZE, self.enemySpeed))
+            self.enemies.add(Enemy(self, pos, GENERAL_SIZE, self.enemySpeed))
+        self.allSprites.add(self.enemies)
 
     def mainLoop(self):
         while self.running:
@@ -169,19 +177,21 @@ class Game():
 
             if self.player.alive:
                 self.playerGroup.update()
+                self.Update()
                 self.player.enemyColCheck(self.enemies, self.player.gun.bullets)
                 self.enemySpawner()
                 
                 # Kontrola kolize hráče s nepřátelskými projektily
                 for e in self.enemies:
                     if isinstance(e, EnemyShooter):
-                        e.update(self.player, self.timeTotal)
+                        e.update()
                         for bullet in e.bullets:
                             if not bullet.friendly and self.player.rect.colliderect(bullet.rect):
                                 self.player.alive = False  # Hráč umírá
                                 pygame.mixer.Sound.play(self.player.hurtSFX).set_volume(VOLUME)
                     else:
-                        e.update(self.player)
+                        pass
+                        #e.update(self.player)
             else:
                 self.restartText.isVisable = True
 
@@ -190,7 +200,7 @@ class Game():
 
             self.shoot = False
 
-            self.Update()
+            
             self.Render()
 
 g = Game()

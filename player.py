@@ -119,18 +119,18 @@ class Player(Object):
 
     def enemyColCheck(self, enemies, bullets):
         # Collision with enemies
-        for e in enemies[:]:
+        for e in enemies:
             if self.rect.colliderect(e.rect):
                 self.alive = False
                 pg.mixer.Sound.play(self.hurtSFX).set_volume(VOLUME)
                 return 
         
         # Bullet and enemy collision
-        for e in enemies[:]:
+        for e in enemies:
             for b in bullets[:]:
                 if b[1].colliderect(e.rect):
                     pg.mixer.Sound.play(self.hitSFX).set_volume(VOLUME)
-                    enemies.remove(e)
+                    e.kill()
                     bullets.remove(b)
                     self.game.score += 1
                     self.game.levelHandler()

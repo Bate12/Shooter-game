@@ -17,11 +17,11 @@ class Object(pg.sprite.Sprite):
 
         self.color = color
         self.image = pg.Surface([self.width, self.height]) 
-        self.image.fill((255,255,255)) 
-        self.image.set_colorkey(self.color)
+        self.image.fill(self.color) 
+        #self.image.set_colorkey(self.color)
 
         self.pos = Vec(pos)
-        self.vel = speed
+        self.speed = speed
 
         self.rect = self.image.get_rect()
         self.isCentered = isCentered
@@ -39,7 +39,7 @@ class Object(pg.sprite.Sprite):
     def moveTowards(self, target: Vec | list | tuple):
         if isinstance(target, list | tuple):
             target = Vec(target[0], target[1])
-        self.pos = self.pos.move_towards(target, self.vel)
+        self.pos = self.pos.move_towards(target, self.speed)
         self.updateRect()
 
     def update(self):

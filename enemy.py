@@ -1,24 +1,16 @@
 import pygame, math
+from object import Object
 from settings import *
 
-class Enemy():
-    def __init__(self, pos, size, speed):
-        self.pos = pygame.Vector2(pos)
-        self.vel = speed
-        self.size = size
-        self.color = (200,50,50)
-        self.rect = pygame.Rect(self.pos.x ,self.pos.y, self.size, self.size)
+class Enemy(Object):
+    def __init__(self, game, pos, size, speed, color=(200,50,50)):
+        super().__init__(game, pos, size, speed=speed, color=color ,isCentered=False)
 
-    def updateRect(self):
-        self.rect = pygame.Rect(self.pos.x ,self.pos.y, self.size, self.size)
-
-    def update(self, player):
-        self.pos = self.pos.move_towards(player.pos, self.vel)
+    def update(self):
+        self.moveTowards(self.game.player.pos)
 
         self.updateRect()
 
-    def render(self, win):
-        pygame.draw.rect(win, self.color, self.rect)
 
 if __name__ == "__main__":
     quit()
